@@ -95,8 +95,8 @@ const EMPLOYEES = [
   { name: 'Pedro', role: 'Armador' },
   { name: 'Manolo', role: 'Panadero' },
   { name: 'Aldo', role: 'Papero' },
-  { name: 'Pablo', role: 'Dueño' },
-  { name: 'Flor', role: 'Dueño' },
+  { name: 'Pablo', role: 'Jefe' },
+  { name: 'Flor', role: 'Jefe' },
   { name: 'Ulises', role: 'Limpieza' },
   { name: 'Mariela Caja', role: 'Caja' },
   { name: 'Mariela Runner', role: 'Runner' },
@@ -138,8 +138,8 @@ const CAJA_STRUCTURE = {
 // poder mostrar/ocultar pantallas sin esperar una consulta; quien de verdad
 // hace cumplir el permiso es Supabase (RLS), no esto — así que si algún día
 // cambian los permisos, hay que actualizar los dos lados.
-const FULL_VIEW_ROLES = ['Dueño', 'Cocinero', 'Caja', 'Runner'];
-const FULL_EDIT_ROLES = ['Dueño', 'Cocinero'];
+const FULL_VIEW_ROLES = ['Jefe', 'Cocinero', 'Caja', 'Runner'];
+const FULL_EDIT_ROLES = ['Jefe', 'Cocinero'];
 const ROLE_CATEGORIES = {
   Armador: ['Panadería', 'Vegetales', 'Salsas y Aderezos', 'Condimentos', 'Fiambres', 'Manteca', 'Congelados', 'Despensa'],
   Panadero: ['Panadería', 'Despensa'],
