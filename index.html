@@ -133,28 +133,47 @@ const CAJA_STRUCTURE = {
 };
 
 // ==================== PERMISOS POR ROL ====================
-// OJO: esto tiene que reflejar EXACTAMENTE la tabla role_categories que
-// armamos en Supabase (Paso 2 del SQL). Es una copia en el frontend para
-// poder mostrar/ocultar pantallas sin esperar una consulta; quien de verdad
-// hace cumplir el permiso es Supabase (RLS), no esto — así que si algún día
-// cambian los permisos, hay que actualizar los dos lados.
-const FULL_VIEW_ROLES = ['Jefe', 'Cocinero', 'Caja', 'Runner'];
-const FULL_EDIT_ROLES = ['Jefe', 'Cocinero'];
-const ROLE_CATEGORIES = {
-  Armador: ['Panadería', 'Vegetales', 'Salsas y Aderezos', 'Condimentos', 'Fiambres', 'Manteca', 'Congelados', 'Despensa'],
-  Panadero: ['Panadería', 'Despensa'],
+// OJO: esto tiene que reflejar EXACTAMENTE lo que hay en Supabase (la tabla
+// role_categories y las políticas RLS). Es una copia en el frontend para
+// mostrar/ocultar pantallas sin esperar una consulta; quien de verdad hace
+// cumplir el permiso es la base, no esto — así que si cambian los permisos,
+// hay que tocar los dos lados.
+//
+// VER y EDITAR son dos cosas distintas: hay roles que ven todo el inventario
+// de cocina pero solo pueden modificar una categoría.
+
+// Las 5 categorías del menú Caja, sacadas de CAJA_STRUCTURE para que no se
+// puedan desincronizar.
+const CAJA_CATEGORIES = [...CAJA_STRUCTURE.Semanal, ...CAJA_STRUCTURE.Mensual].map(c => c.key);
+
+// Ven los dos menús: Cocina y Caja.
+const VIEW_ALL_ROLES = ['Jefe', 'Cocinero', 'Caja', 'Runner'];
+// Ven toda la Cocina, pero nada de Caja.
+const VIEW_COCINA_ROLES = ['Panadero', 'Armador', 'Papero', 'Limpieza'];
+// Editan absolutamente todo.
+const EDIT_ALL_ROLES = ['Jefe', 'Cocinero'];
+
+// Qué puede MODIFICAR cada rol restringido. Lo que ve pero no está acá, le
+// aparece en modo solo lectura.
+const ROLE_EDIT_CATEGORIES = {
+  Panadero: ['Panadería'],
+  Armador: ['Vegetales', 'Condimentos', 'Salsas y Aderezos', 'Fiambres', 'Congelados', 'Manteca', 'Bolsas y Papeles', 'Despensa'],
   Papero: ['Papas'],
   Limpieza: ['Limpieza', 'Bolsas y Papeles'],
-  Caja: ['Caja Aderezo Individual', 'Bebidas sin Alcohol', 'Bebidas con Alcohol', 'Descartables', 'Librería'],
-  Runner: ['Caja Aderezo Individual', 'Bebidas sin Alcohol', 'Bebidas con Alcohol', 'Descartables', 'Librería'],
+  Caja: CAJA_CATEGORIES,
+  Runner: CAJA_CATEGORIES,
 };
+
 function canView(role, category) {
-  if (FULL_VIEW_ROLES.includes(role)) return true;
-  return (ROLE_CATEGORIES[role] || []).includes(category);
+  if (VIEW_ALL_ROLES.includes(role)) return true;
+  // El resto ve la cocina entera y nada de caja. Un rol que no esté en
+  // ninguna de las dos listas (por ejemplo "Sin rol") no ve nada, a propósito.
+  if (VIEW_COCINA_ROLES.includes(role)) return !CAJA_CATEGORIES.includes(category);
+  return false;
 }
 function canEdit(role, category) {
-  if (FULL_EDIT_ROLES.includes(role)) return true;
-  return (ROLE_CATEGORIES[role] || []).includes(category);
+  if (EDIT_ALL_ROLES.includes(role)) return true;
+  return (ROLE_EDIT_CATEGORIES[role] || []).includes(category);
 }
 // Con qué email entra cada persona a Supabase Auth.
 // Si la fila de EMPLOYEES tiene "email", se usa ese — el mail personal de
@@ -756,7 +775,7 @@ function App() {
                   <div className="mg-display" style={{ fontSize: 20, fontWeight: 700, marginTop: 8 }}>COCINA</div>
                   <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Inventario de cocina y depósito</div>
                 </button>
-                {user && FULL_VIEW_ROLES.includes(user.role) && (
+                {user && VIEW_ALL_ROLES.includes(user.role) && (
                   <button onClick={() => { setMenu('Caja'); setPeriod(null); setView('periods'); }} className="mg-tap" style={menuCardStyle}>
                     <div style={{ fontSize: 32 }}>💰</div>
                     <div className="mg-display" style={{ fontSize: 20, fontWeight: 700, marginTop: 8 }}>CAJA</div>
