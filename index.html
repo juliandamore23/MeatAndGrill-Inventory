@@ -82,8 +82,14 @@ const Clock = createIcon(<><circle cx="12" cy="12" r="10" /><polyline points="12
 const Download = createIcon(<><path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M5 21h14" /></>);
 
 // ==================== CONSTANTES ====================
+// Cada persona puede tener su mail personal en "email". Mientras no lo
+// tenga, se le genera solo uno interno (nombre@meatandgrill.local) y entra
+// igual — así se pueden ir cargando los mails de a uno, sin apuro y sin
+// romperle el login a nadie.
+// PARA AGREGAR UN MAIL: escribí el email: '...' en la fila de esa persona
+// y creá su cuenta en Supabase con esa dirección. Nada más.
 const EMPLOYEES = [
-  { name: 'Julián', role: 'Cocinero' },
+  { name: 'Julián', role: 'Cocinero', email: 'julian.damore1@gmail.com' },
   { name: 'Awol', role: 'Cocinero' },
   { name: 'Valentín', role: 'Armador' },
   { name: 'Pedro', role: 'Armador' },
@@ -150,10 +156,18 @@ function canEdit(role, category) {
   if (FULL_EDIT_ROLES.includes(role)) return true;
   return (ROLE_CATEGORIES[role] || []).includes(category);
 }
-// Convierte "Mariela Caja" en un email ficticio único para poder usar el
-// login real de Supabase Auth sin pedirle un email de verdad a cada persona.
-function employeeEmail(name) {
-  const slug = name
+// Con qué email entra cada persona a Supabase Auth.
+// Si la fila de EMPLOYEES tiene "email", se usa ese — el mail personal de
+// verdad, así puede recuperar su clave y recibir los avisos de Supabase.
+// Si no lo tiene todavía, se le arma uno interno a partir del nombre
+// ("Mariela Caja" -> mariela.caja@meatandgrill.local), que no recibe
+// correo pero sirve igual como identificador para el login.
+// El email que devuelve esta función tiene que coincidir EXACTAMENTE con
+// el de la cuenta en Supabase, si no el login falla con "PIN incorrecto".
+function employeeEmail(emp) {
+  const person = typeof emp === 'string' ? { name: emp } : (emp || {});
+  if (person.email) return person.email.trim().toLowerCase();
+  const slug = String(person.name || '')
     .normalize('NFD').replace(/[̀-ͯ]/g, '') // saca acentos
     .toLowerCase().trim().replace(/\s+/g, '.');
   return `${slug}@meatandgrill.local`;
@@ -444,7 +458,7 @@ function App() {
     setAuthError(null);
     try {
       const { data, error } = await sb.auth.signInWithPassword({
-        email: employeeEmail(pendingEmployee.name),
+        email: employeeEmail(pendingEmployee),
         password: pinToPassword(pin),
       });
       if (error) throw error;
