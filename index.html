@@ -159,6 +159,16 @@ function employeeEmail(name) {
   return `${slug}@meatandgrill.local`;
 }
 
+// Supabase exige contraseñas de 6 caracteres como mínimo y no permite
+// bajar ese límite, pero los PIN del local son de 4 dígitos. Por eso le
+// pegamos el sufijo "mg" antes de mandarlo: el PIN 1234 viaja como
+// "1234mg". La persona nunca ve esto; solo escribe sus 4 dígitos.
+// IMPORTANTE: las cuentas en Supabase se crean con la password YA con el
+// sufijo incluido, si no el login falla.
+function pinToPassword(pin) {
+  return `${pin}mg`;
+}
+
 const SEED_PRODUCTS = [
   { id: 'bollos', name: 'Bollos', category: 'Carnicería', unit: 'Bolsa', factor: 20, stock: 20, minimo: 20 },
   { id: 'jamon', name: 'Jamón', category: 'Fiambres', unit: 'Paquete', factor: null, stock: 2, minimo: 1 },
@@ -435,7 +445,7 @@ function App() {
     try {
       const { data, error } = await sb.auth.signInWithPassword({
         email: employeeEmail(pendingEmployee.name),
-        password: pin,
+        password: pinToPassword(pin),
       });
       if (error) throw error;
       const meta = (data.user && data.user.user_metadata) || {};
