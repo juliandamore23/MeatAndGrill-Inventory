@@ -137,6 +137,16 @@ const CAJA_STRUCTURE = {
 // se sume alguien, cae solo en su grupo sin importar donde se lo escriba.
 // El orden dentro de cada rol es el de EMPLOYEES (el sort de JS es estable).
 // Un rol que no este en esta lista se va al final en vez de saltar al principio.
+// Compara sin acentos ni mayusculas, para que "valentin" encuentre a
+// "Valentin" y "panaderia" encuentre a "Panaderia".
+function normalizar(t) {
+  return String(t || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 const ORDEN_ROLES = ['Jefe', 'Cocinero', 'Armador', 'Papero', 'Panadero', 'Limpieza', 'Caja', 'Runner'];
 function ordenRol(rol) {
   const i = ORDEN_ROLES.indexOf(rol);
@@ -517,6 +527,7 @@ function App() {
   const [user, setUser] = useState(null); // { id, name, role } una vez logueado de verdad
   const [pendingEmployee, setPendingEmployee] = useState(null); // { name, role } elegido, esperando PIN
   const [pin, setPin] = useState('');
+  const [buscar, setBuscar] = useState('');
   const [authError, setAuthError] = useState(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [menu, setMenu] = useState(null);
@@ -635,6 +646,7 @@ function App() {
     setUser(null);
     setPendingEmployee(null);
     setPin('');
+    setBuscar('');
     setMenu(null);
     setPeriod(null);
     setLoadError(null);
@@ -754,6 +766,22 @@ function App() {
   const allCategoriesForMenu = menu === 'Caja' ? (CAJA_STRUCTURE[period] || []) : CATEGORIES;
   const activeCategories = user ? allCategoriesForMenu.filter(cat => canView(user.role, cat.key)) : allCategoriesForMenu;
   const canEditCurrentProduct = user && currentProduct ? canEdit(user.role, currentProduct.category) : false;
+  // Busca en el nombre y tambien en el rol, asi escribir "cocinero" trae a
+  // todos los cocineros. Con el campo vacio se ve la lista completa.
+  const textoBuscado = normalizar(buscar);
+  const empleadosFiltrados = textoBuscado
+    ? EMPLEADOS_ORDENADOS.filter(e =>
+        normalizar(e.name).indexOf(textoBuscado) !== -1 ||
+        normalizar(e.role).indexOf(textoBuscado) !== -1)
+    : EMPLEADOS_ORDENADOS;
+
+  function elegirEmpleado(emp) {
+    setPendingEmployee(emp);
+    setAuthError(null);
+    setPin('');
+    setBuscar('');
+  }
+
   const visibleProducts = products.filter(matchesMenu);
   const visibleLowCount = visibleProducts.filter(isLow).length;
 
@@ -849,9 +877,54 @@ function App() {
             </div>
             <div style={{ width: '100%' }}>
               <div className="mg-display" style={{ color: C.cream, fontSize: 19, fontWeight: 700, letterSpacing: '0.02em', marginBottom: 12, textAlign: 'center' }}>¿Quién sos?</div>
+              <div style={{ position: 'relative', marginBottom: 12 }}>
+                <input
+                  type="text"
+                  value={buscar}
+                  onChange={e => setBuscar(e.target.value)}
+                  onKeyDown={e => {
+                    // Si la busqueda dejo una sola persona, Enter la elige.
+                    if (e.key === 'Enter' && empleadosFiltrados.length === 1) {
+                      elegirEmpleado(empleadosFiltrados[0]);
+                    }
+                  }}
+                  placeholder="Buscar por nombre o rol"
+                  aria-label="Buscar por nombre o rol"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  className="mg-body"
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    background: 'rgba(26,26,26,0.86)', border: `1px solid ${C.line}`,
+                    borderRadius: 12, padding: '13px 40px 13px 14px',
+                    color: C.cream, fontSize: 15, outline: 'none',
+                    backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)',
+                  }}
+                />
+                {buscar && (
+                  <button
+                    onClick={() => setBuscar('')}
+                    aria-label="Borrar la busqueda"
+                    className="mg-tap"
+                    style={{
+                      position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                      width: 30, height: 30, borderRadius: 999, border: 'none',
+                      background: 'transparent', color: C.muted, fontSize: 20,
+                      cursor: 'pointer', lineHeight: 1,
+                    }}
+                  >&times;</button>
+                )}
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {EMPLEADOS_ORDENADOS.map(emp => (
-                  <button key={emp.name} onClick={() => { setPendingEmployee(emp); setAuthError(null); setPin(''); }} className="mg-tap" style={{
+                {empleadosFiltrados.length === 0 && (
+                  <div style={{ color: C.muted, fontSize: 13, textAlign: 'center', padding: '18px 0' }}>
+                    Nadie coincide con "{buscar}".
+                  </div>
+                )}
+                {empleadosFiltrados.map(emp => (
+                  <button key={emp.name} onClick={() => elegirEmpleado(emp)} className="mg-tap" style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     background: 'rgba(26,26,26,0.86)', border: `1px solid ${C.line}`, borderRadius: 12,
                     padding: '14px 16px', color: C.cream, cursor: 'pointer',
