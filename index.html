@@ -132,6 +132,68 @@ const CAJA_STRUCTURE = {
   ],
 };
 
+// ==================== ICONO DE CADA PRODUCTO ====================
+// Se busca por palabra clave dentro del nombre, de arriba hacia abajo, y
+// gana la primera que coincide. Por eso lo especifico va primero: "salsa
+// tabasco" antes que "salsa", "salvia" y "salpimienta" antes que "sal",
+// "pan de lomo" antes que "lomo".
+// Si no coincide ninguna, cae al emoji de la categoria, asi un producto
+// nuevo siempre tiene icono aunque nadie lo agregue a esta lista.
+const ICONOS_PRODUCTO = [
+  // --- lo que chocaria si fuera suelto, primero ---
+  ['salsa tabasco', '🌶️'], ['salpimienta', '🧂'], ['salvia', '🌿'],
+  ['salsa de pescado', '🐟'], ['salsa de soja', '🍶'], ['salsa barbacoa', '🍖'],
+  ['salsa inglesa', '🥫'], ['salsa', '🥫'], ['sal', '🧂'],
+  ['pan de lomo', '🥖'], ['panes de hamburguesa', '🍞'], ['ciabatta', '🥖'],
+  ['cajas de papa', '📦'], ['bolsas de envasar', '🛍️'], ['bolsas de delivery', '🛍️'],
+  // --- carniceria y fiambres ---
+  ['medallon', '🍔'], ['bollo', '🍖'], ['bife', '🥩'], ['lomo', '🥩'],
+  ['panceta', '🥓'], ['jamon', '🍖'], ['jamón', '🍖'],
+  ['cheddar', '🧀'], ['tybo', '🧀'], ['notco', '🌱'],
+  // --- papas ---
+  ['papas', '🍟'],
+  // --- bebidas ---
+  ['barril', '🛢️'], ['stella', '🍺'], ['patagonia', '🍺'], ['ipa', '🍺'],
+  ['coca', '🥤'], ['sprite', '🥤'], ['fanta', '🥤'],
+  ['soda', '🫧'], ['agua', '💧'],
+  // --- condimentos, salsas y despensa ---
+  ['paprika', '🌶️'], ['gochujang', '🌶️'], ['morron', '🫑'], ['morrón', '🫑'],
+  ['sesamo', '🌰'], ['sésamo', '🌰'], ['ajo', '🧄'],
+  ['perejil', '🌿'], ['romero', '🌿'], ['tomillo', '🌿'], ['chimichurri', '🌿'],
+  ['pimienta', '🧂'], ['jim bean', '🥃'], ['aceite', '🫒'],
+  ['azucar', '🍬'], ['azúcar', '🍬'], ['manteca', '🧈'],
+  ['mayonesa', '🥣'], ['ketchup', '🍅'], ['mostaza', '🌭'],
+  // --- vegetales ---
+  ['cebolla', '🧅'], ['lechuga', '🥬'], ['tomate', '🍅'],
+  ['pepinillo', '🥒'], ['criolla', '🫑'],
+  // --- limpieza ---
+  ['desinfectante', '🧴'], ['detergente', '🧴'], ['desodorante', '💨'],
+  ['lavandina', '🧪'], ['panther', '🧴'], ['alcohol', '🧴'],
+  ['limon', '🍋'], ['limón', '🍋'], ['vinagre de arroz', '🍶'], ['vinagre', '🧪'],
+  ['jabon', '🧼'], ['jabón', '🧼'], ['limpiavidrios', '🪟'],
+  // --- descartables, papeles y libreria ---
+  ['servilleta', '🧻'], ['vaso', '🥤'], ['cubierto', '🍴'],
+  ['escarbadiente', '🍢'], ['papel', '📄'], ['folex', '📦'],
+  ['bandita', '➰'], ['gancho', '📎'], ['lapicera', '🖊️'],
+  ['fibron', '🖍️'], ['fibrón', '🖍️'], ['rollo', '🧾'],
+];
+
+// Respaldo: el emoji de la categoria, sacado de las listas de arriba para
+// que no se puedan desincronizar.
+const ICONO_CATEGORIA = {};
+CATEGORIES.forEach(c => { ICONO_CATEGORIA[c.key] = c.emoji; });
+Object.keys(CAJA_STRUCTURE).forEach(per => {
+  CAJA_STRUCTURE[per].forEach(c => { ICONO_CATEGORIA[c.key] = c.emoji; });
+});
+
+function productIcon(p) {
+  const nombre = String((p && p.name) || '').toLowerCase();
+  for (let i = 0; i < ICONOS_PRODUCTO.length; i++) {
+    if (nombre.indexOf(ICONOS_PRODUCTO[i][0]) !== -1) return ICONOS_PRODUCTO[i][1];
+  }
+  return ICONO_CATEGORIA[p && p.category] || '📦';
+}
+
 // ==================== PERMISOS POR ROL ====================
 // OJO: esto tiene que reflejar EXACTAMENTE lo que hay en Supabase (la tabla
 // role_categories y las políticas RLS). Es una copia en el frontend para
@@ -939,13 +1001,16 @@ function App() {
                         background: C.surface, border: `1px solid ${low ? C.alert : ok ? C.ok : C.line}`,
                         borderRadius: 12, padding: '14px 16px', cursor: 'pointer', color: C.cream, textAlign: 'left',
                       }}>
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</div>
-                          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
-                            {p.stock} {plural(p.unit, p.stock)}{units ? ` · ${units} u.` : ''}
-                            <span style={{ color: low ? C.alert : ok ? C.ok : C.muted }}>
-                              {' · mín. '}{p.minimo}
-                            </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                          <div style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>{productIcon(p)}</div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</div>
+                            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                              {p.stock} {plural(p.unit, p.stock)}{units ? ` · ${units} u.` : ''}
+                              <span style={{ color: low ? C.alert : ok ? C.ok : C.muted }}>
+                                {' · mín. '}{p.minimo}
+                              </span>
+                            </div>
                           </div>
                         </div>
                         {low && <AlertTriangle size={18} color={C.alert} />}
@@ -959,8 +1024,12 @@ function App() {
 
             {view === 'detail' && currentProduct && (
               <div style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: 20, textAlign: 'center' }}>
-                  <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>{currentProduct.category} · {currentProduct.unit}</div>
+                <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: '24px 20px 20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 54, lineHeight: 1 }}>{productIcon(currentProduct)}</div>
+                  <div className="mg-display" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.15, marginTop: 10 }}>
+                    {currentProduct.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 6, marginBottom: 16 }}>{currentProduct.category} · {currentProduct.unit}</div>
                   <div className="mg-display" style={{ fontSize: 44, fontWeight: 700, lineHeight: 1 }}>{currentProduct.stock}</div>
                   <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
                     {plural(currentProduct.unit, currentProduct.stock)}
