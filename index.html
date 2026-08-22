@@ -417,8 +417,8 @@ const C = {
   okSoft: 'rgba(76,175,80,0.13)',
 
   bg: '#0E0E0E',
-  surface: '#1A1A1A',
-  surface2: '#242424',
+  surface: 'rgba(26,26,26,0.86)',
+  surface2: 'rgba(36,36,36,0.88)',
   line: '#333333',
 
   cream: '#FFFFFF',   // el blanco del logo (el nombre quedó de la paleta vieja)
@@ -841,22 +841,31 @@ function App() {
     );
   }
 
-  // La foto de fondo del login va en una capa FIJA, no como background del
-  // contenedor: la lista de 14 personas no entra en una pantalla de celular,
-  // asi que la pantalla scrollea y el fondo se iria con ella.
-  // El degradado arriba es suave (deja ver la foto y su logo) y abajo casi
-  // opaco, que es donde estan los nombres y hay que poder leerlos.
-  // Si la imagen no cargara, queda el negro de siempre.
-  const fondoLogin = {
+  // Cada pantalla tiene su foto. Van en una capa FIJA y no como background
+  // del contenedor: las pantallas scrollean y el fondo se iria con ellas.
+  //
+  // El velo encima cambia de intensidad segun cuanto haya que leer arriba.
+  // Login y menu tienen pocos elementos y grandes, asi que se banca ver la
+  // foto. Las pantallas de adentro son listas densas de productos con estados
+  // en ambar y verde: ahi el velo va casi opaco y la foto queda como textura.
+  // Si una imagen no cargara, queda el negro de siempre.
+  const FONDOS = {
+    login:    { foto: 'fondo.jpg',          velo: [0.30, 0.52, 0.86, 0.97] },
+    menu:     { foto: 'fondo-menu.jpg',     velo: [0.55, 0.66, 0.82, 0.94] },
+    interior: { foto: 'fondo-interior.jpg', velo: [0.82, 0.86, 0.90, 0.94] },
+  };
+  const fondoActual =
+    FONDOS[view === 'login' ? 'login' : view === 'menu' ? 'menu' : 'interior'];
+  const capaFondo = {
     position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
     backgroundColor: C.bg,
     backgroundImage:
       'linear-gradient(to bottom,'
-      + ' rgba(14,14,14,0.30) 0%,'
-      + ' rgba(14,14,14,0.52) 30%,'
-      + ' rgba(14,14,14,0.86) 58%,'
-      + ' rgba(14,14,14,0.97) 100%),'
-      + ' url("fondo.jpg")',
+      + ' rgba(14,14,14,' + fondoActual.velo[0] + ') 0%,'
+      + ' rgba(14,14,14,' + fondoActual.velo[1] + ') 30%,'
+      + ' rgba(14,14,14,' + fondoActual.velo[2] + ') 62%,'
+      + ' rgba(14,14,14,' + fondoActual.velo[3] + ') 100%),'
+      + ' url("' + fondoActual.foto + '")',
     backgroundSize: 'cover, cover',
     backgroundPosition: 'center, center',
     backgroundRepeat: 'no-repeat, no-repeat',
@@ -864,7 +873,7 @@ function App() {
 
   return (
     <div style={containerStyle} className="mg-body">
-      {view === 'login' && <div style={fondoLogin} aria-hidden="true" />}
+      <div style={capaFondo} aria-hidden="true" />
       <div style={{ maxWidth: 440, margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
 
         {view === 'login' && !pendingEmployee && (
@@ -1002,7 +1011,8 @@ function App() {
         {view !== 'login' && (
           <>
             <div style={{
-              position: 'sticky', top: 0, zIndex: 10, background: C.bg,
+              position: 'sticky', top: 0, zIndex: 10, background: 'rgba(14,14,14,0.88)',
+              backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
               borderBottom: `1px solid ${C.line}`, padding: '14px 16px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
@@ -1291,7 +1301,7 @@ function btnStyle(color) {
 }
 const menuCardStyle = {
   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-  background: '#1A1A1A', border: '1px solid #333333', borderRadius: 16,
+  background: 'rgba(26,26,26,0.86)', border: '1px solid #333333', borderRadius: 16,
   padding: '28px 16px', cursor: 'pointer', color: '#FFFFFF', textAlign: 'center',
 };
 const exportBtnStyle = {
