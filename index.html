@@ -850,26 +850,49 @@ function App() {
   // en ambar y verde: ahi el velo va casi opaco y la foto queda como textura.
   // Si una imagen no cargara, queda el negro de siempre.
   const FONDOS = {
-    login:    { foto: 'fondo.jpg',          velo: [0.30, 0.52, 0.86, 0.97] },
-    menu:     { foto: 'fondo-menu.jpg',     velo: [0.55, 0.66, 0.82, 0.94] },
-    interior: { foto: 'fondo-interior.jpg', velo: [0.82, 0.86, 0.90, 0.94] },
+    login:      { foto: 'fondo.jpg',             velo: [0.30, 0.52, 0.86, 0.97] },
+    menu:       { foto: 'fondo-menu.jpg',        velo: [0.55, 0.66, 0.82, 0.94] },
+    categorias: { foto: 'fondo-categorias.jpg',  velo: [0.62, 0.72, 0.86, 0.95] },
+    // Dentro de una categoria NO va foto. Ahi se cambia el stock y hay que
+    // leer los estados en ambar y verde de un vistazo: cualquier imagen
+    // detras compite justo donde no tiene que competir.
+    // En su lugar va el negro de la marca con el damero rojo y blanco muy
+    // tenue, que es el patron de Meat & Grill, y una luz roja arriba.
+    productos:  { color: true },
   };
-  const fondoActual =
-    FONDOS[view === 'login' ? 'login' : view === 'menu' ? 'menu' : 'interior'];
-  const capaFondo = {
-    position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-    backgroundColor: C.bg,
-    backgroundImage:
-      'linear-gradient(to bottom,'
-      + ' rgba(14,14,14,' + fondoActual.velo[0] + ') 0%,'
-      + ' rgba(14,14,14,' + fondoActual.velo[1] + ') 30%,'
-      + ' rgba(14,14,14,' + fondoActual.velo[2] + ') 62%,'
-      + ' rgba(14,14,14,' + fondoActual.velo[3] + ') 100%),'
-      + ' url("' + fondoActual.foto + '")',
-    backgroundSize: 'cover, cover',
-    backgroundPosition: 'center, center',
-    backgroundRepeat: 'no-repeat, no-repeat',
-  };
+  const fondoActual = FONDOS[
+    view === 'login' ? 'login'
+    : view === 'menu' ? 'menu'
+    : (view === 'products' || view === 'detail') ? 'productos'
+    : 'categorias'
+  ];
+  const capaFondo = fondoActual.color
+    ? {
+        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        backgroundColor: C.bg,
+        backgroundImage:
+          'repeating-conic-gradient('
+          + 'rgba(245,28,21,0.055) 0% 25%, rgba(255,255,255,0.022) 0% 50%),'
+          + ' radial-gradient(120% 62% at 50% -12%,'
+          + ' rgba(245,28,21,0.16) 0%, rgba(245,28,21,0.04) 45%, rgba(14,14,14,0) 75%)',
+        backgroundSize: '64px 64px, 100% 100%',
+        backgroundPosition: 'center, center',
+        backgroundRepeat: 'repeat, no-repeat',
+      }
+    : {
+        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        backgroundColor: C.bg,
+        backgroundImage:
+          'linear-gradient(to bottom,'
+          + ' rgba(14,14,14,' + fondoActual.velo[0] + ') 0%,'
+          + ' rgba(14,14,14,' + fondoActual.velo[1] + ') 30%,'
+          + ' rgba(14,14,14,' + fondoActual.velo[2] + ') 62%,'
+          + ' rgba(14,14,14,' + fondoActual.velo[3] + ') 100%),'
+          + ' url("' + fondoActual.foto + '")',
+        backgroundSize: 'cover, cover',
+        backgroundPosition: 'center, center',
+        backgroundRepeat: 'no-repeat, no-repeat',
+      };
 
   return (
     <div style={containerStyle} className="mg-body">
