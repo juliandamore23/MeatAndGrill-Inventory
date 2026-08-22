@@ -379,6 +379,26 @@ function isLow(p) {
 
 // Stock en orden: por ENCIMA del minimo. Ojo que isLow() usa <=, asi que
 // estar justo en el minimo cuenta como alerta (es el punto de reposicion).
+// Plural de la unidad. Antes se pegaba una "s" y salian cosas como
+// "0 Unidads", "3 Sachet de 3kgs" o "1 Caja de 196 unidadess".
+// Reglas: solo se pluraliza el sustantivo principal (lo de antes del primer
+// espacio), las siglas quedan igual, y el resto sigue el castellano.
+const PLURAL_IRREGULAR = { GN: 'GN' };
+function plural(unidad, cantidad) {
+  const texto = String(unidad || '');
+  if (cantidad === 1 || !texto) return texto;
+  const partes = texto.split(' ');
+  const cabeza = partes[0];
+  if (PLURAL_IRREGULAR[cabeza]) partes[0] = PLURAL_IRREGULAR[cabeza];
+  else if (/^[A-Z0-9]{1,3}$/.test(cabeza)) partes[0] = cabeza;          // siglas: GN, L, ml
+  else if (/[aeiou]$/i.test(cabeza)) partes[0] = cabeza + 's';          // Bolsa -> Bolsas
+  else if (/ón$/i.test(cabeza)) partes[0] = cabeza.slice(0, -2) + 'ones'; // Bidón -> Bidones
+  else if (/z$/i.test(cabeza)) partes[0] = cabeza.slice(0, -1) + 'ces';
+  else if (/t$/i.test(cabeza)) partes[0] = cabeza + 's';                // Sachet -> Sachets
+  else partes[0] = cabeza + 'es';                                       // Unidad -> Unidades
+  return partes.join(' ');
+}
+
 function isOk(p) {
   return Number.isFinite(Number(p.stock)) && !isLow(p);
 }
@@ -922,7 +942,7 @@ function App() {
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</div>
                           <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
-                            {p.stock} {p.unit}{p.stock !== 1 ? 's' : ''}{units ? ` · ${units} u.` : ''}
+                            {p.stock} {plural(p.unit, p.stock)}{units ? ` · ${units} u.` : ''}
                             <span style={{ color: low ? C.alert : ok ? C.ok : C.muted }}>
                               {' · mín. '}{p.minimo}
                             </span>
@@ -943,7 +963,7 @@ function App() {
                   <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>{currentProduct.category} · {currentProduct.unit}</div>
                   <div className="mg-display" style={{ fontSize: 44, fontWeight: 700, lineHeight: 1 }}>{currentProduct.stock}</div>
                   <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
-                    {currentProduct.unit}{currentProduct.stock !== 1 ? 's' : ''}
+                    {plural(currentProduct.unit, currentProduct.stock)}
                     {totalUnits(currentProduct) ? ` · ${totalUnits(currentProduct)} unidades` : ''}
                   </div>
                   {isLow(currentProduct) && (
@@ -997,7 +1017,7 @@ function App() {
                       {actionMode === 'ingreso' ? 'Registrar ingreso' : actionMode === 'salida' ? 'Registrar salida' : 'Hacer conteo'}
                     </div>
                     <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>
-                      {actionMode === 'conteo' ? 'Ingresá el stock real que contaste' : `Cantidad de ${currentProduct.unit.toLowerCase()}s`}
+                      {actionMode === 'conteo' ? 'Ingresá el stock real que contaste' : `Cantidad de ${plural(currentProduct.unit, 2).toLowerCase()}`}
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, marginBottom: 16 }}>
