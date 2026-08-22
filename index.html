@@ -527,12 +527,23 @@ function App() {
   }
 
   async function handleLogout() {
-    await sb.auth.signOut();
+    // scope 'local' borra la sesion guardada en este dispositivo sin pedirle
+    // permiso al servidor. Es lo que hace falta cuando el token esta roto:
+    // un signOut normal se lo manda a Supabase, Supabase lo rechaza por
+    // invalido, y la sesion rota quedaria guardada para siempre.
+    try {
+      await sb.auth.signOut({ scope: 'local' });
+    } catch (e) {
+      console.error('No se pudo cerrar sesion limpiamente', e);
+    }
     setUser(null);
     setPendingEmployee(null);
     setPin('');
     setMenu(null);
     setPeriod(null);
+    setLoadError(null);
+    setProducts([]);
+    setMovements([]);
     setView('login');
   }
 
@@ -676,14 +687,31 @@ function App() {
   }
 
   if (loadError) {
+    // Si el problema es la sesion guardada (token vencido, con fecha rara por
+    // un reloj desfasado, o invalidado desde Supabase), reintentar no sirve:
+    // vuelve a mandar el mismo token roto. Lo unico que destraba es cerrar
+    // sesion y volver a entrar, asi que en ese caso ese es el boton principal.
+    const esSesion = /jwt|token|session|expired|issued|invalid|401|403/i.test(String(loadError));
     return (
       <div style={{ ...containerStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' }} className="mg-body">
-        <div>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>No se pudo conectar con la base de datos</div>
-          <div style={{ color: C.muted, fontSize: 13, maxWidth: 320, margin: '0 auto 16px' }}>{loadError}</div>
-          <button onClick={load} className="mg-tap" style={{ padding: '10px 20px', borderRadius: 10, background: C.accent, border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
-            Reintentar
-          </button>
+        <div style={{ maxWidth: 320 }}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>
+            {esSesion ? 'Tu sesión venció' : 'No se pudo conectar con la base de datos'}
+          </div>
+          <div style={{ color: C.muted, fontSize: 13, margin: '0 auto 16px' }}>
+            {esSesion
+              ? 'Volvé a entrar con tu PIN y listo. No se pierde nada de lo cargado.'
+              : 'Revisá tu conexión a internet e intentá de nuevo.'}
+          </div>
+          <div style={{ color: C.muted, fontSize: 11, margin: '0 auto 16px', opacity: 0.7 }}>{loadError}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button onClick={esSesion ? handleLogout : load} className="mg-tap" style={{ padding: '11px 20px', borderRadius: 10, background: C.accent, border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+              {esSesion ? 'Volver a entrar' : 'Reintentar'}
+            </button>
+            <button onClick={esSesion ? load : handleLogout} className="mg-tap" style={{ padding: '10px 20px', borderRadius: 10, background: 'transparent', border: `1px solid ${C.line}`, color: C.muted, cursor: 'pointer', fontSize: 13 }}>
+              {esSesion ? 'Reintentar' : 'Cerrar sesión'}
+            </button>
+          </div>
         </div>
       </div>
     );
