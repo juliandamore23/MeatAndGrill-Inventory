@@ -20,6 +20,7 @@ import sys
 import json
 import smtplib
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
@@ -69,14 +70,18 @@ def traer_datos(base, key, email, password, desde_iso):
     rol = (sesion.get('user', {}).get('user_metadata') or {}).get('role', '?')
 
     productos = pedir(base + '/rest/v1/products?select=*&order=category,name', token, key)
-    movimientos = pedir(
-        base + '/rest/v1/movements?select=*&ts=gte.' + desde_iso + '&order=ts.desc',
-        token, key)
-
     if not productos:
         raise SystemExit(
             'La cuenta entro bien (rol: %s) pero no ve ningun producto. '
             'Seguramente le falta el rol correcto en la tabla employees.' % rol)
+
+    # OJO: la fecha va escapada. Un timestamp ISO termina en "+00:00" y en una
+    # URL el "+" significa ESPACIO, asi que Supabase recibia la fecha rota y
+    # devolvia 400. quote() lo convierte en %2B.
+    movimientos = pedir(
+        base + '/rest/v1/movements?select=*&ts=gte.'
+        + urllib.parse.quote(desde_iso, safe='') + '&order=ts.desc',
+        token, key)
 
     return productos, movimientos, rol
 
