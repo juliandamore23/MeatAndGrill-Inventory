@@ -1149,7 +1149,7 @@ function App() {
                             <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
                               {p.stock} {plural(p.unit, p.stock)}{units ? ` · ${units} u.` : ''}
                               <span style={{ color: low ? C.alert : ok ? C.ok : C.muted }}>
-                                {' · mín. '}{p.minimo}
+                                {Number(p.minimo) === 0 ? ' · avisa en 0' : ` · mín. ${p.minimo}`}
                               </span>
                             </div>
                           </div>
@@ -1183,7 +1183,7 @@ function App() {
                       padding: '6px 12px', fontSize: 12, color: C.alert,
                     }}>
                       <AlertTriangle size={14} />
-                      Hay que reponer — mínimo {currentProduct.minimo}
+                      {Number(currentProduct.minimo) === 0 ? 'Sin stock — hay que reponer' : `Hay que reponer — mínimo ${currentProduct.minimo}`}
                     </div>
                   )}
                   {isOk(currentProduct) && (
@@ -1193,7 +1193,7 @@ function App() {
                       padding: '6px 12px', fontSize: 12, color: C.ok,
                     }}>
                       <Check size={14} />
-                      En stock — mínimo {currentProduct.minimo}
+                      {Number(currentProduct.minimo) === 0 ? 'En stock' : `En stock — mínimo ${currentProduct.minimo}`}
                     </div>
                   )}
                 </div>
