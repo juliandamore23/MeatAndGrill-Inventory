@@ -54,7 +54,7 @@ Para las dos, el diagnóstico rápido es `verificar-cuentas.sql`.
 |---|---|
 | `seed-products.sql` | Carga los 102 productos. Usa `on conflict do nothing`: no pisa el stock existente. |
 | `fix-menu.sql` | Completa la columna `menu` (Cocina / Caja) y el `period`. |
-| `minimos.sql` | Ajusta los stocks mínimos. |
+| `minimos.sql` | **El único archivo que define stocks mínimos.** Se lee de arriba hacia abajo y gana el último que escribe: primero los valores por categoría, después las excepciones. Correrlo entero. |
 | `unidades.sql` | Carga el rinde por envase (`factor`) y corrige las unidades. |
 
 ### Cuentas
