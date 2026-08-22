@@ -156,6 +156,40 @@ const EMPLEADOS_ORDENADOS = EMPLOYEES.slice().sort(
   (a, b) => ordenRol(a.role) - ordenRol(b.role)
 );
 
+// ==================== PREGUNTAS FRECUENTES ====================
+// Cada pregunta define QUE productos mira; la respuesta se calcula con el
+// stock del momento, no hay nada escrito a mano que pueda quedar viejo.
+//   categorias -> todos los productos de esas categorias
+//   nombres    -> productos puntuales, por nombre exacto
+//   faltantes  -> lo que este por debajo del minimo, sea de donde sea
+// Solo se le muestran a cada persona las preguntas cuyos productos su rol
+// tiene permitido ver.
+const PREGUNTAS = [
+  { q: '¿Qué hay que reponer?', faltantes: true },
+  { q: '¿Cuántos panes quedan?', categorias: ['Panadería'] },
+  { q: '¿Cuántos bollos quedan?', nombres: ['Bollos'] },
+  { q: '¿Cuánta carne queda?', categorias: ['Carnicería'] },
+  { q: '¿Cuántas papas quedan?', categorias: ['Papas'] },
+  { q: '¿Cuántos fiambres quedan?', categorias: ['Fiambres'] },
+  { q: '¿Cuántos vegetales quedan?', categorias: ['Vegetales'] },
+  { q: '¿Cómo están las salsas?', categorias: ['Salsas y Aderezos'] },
+  { q: '¿Cuánta manteca queda?', categorias: ['Manteca'] },
+  { q: '¿Cómo está la despensa?', categorias: ['Despensa'] },
+  { q: '¿Cómo están los condimentos?', categorias: ['Condimentos'] },
+  { q: '¿Cómo está la limpieza?', categorias: ['Limpieza', 'Bolsas y Papeles'] },
+  { q: '¿Cuántas bebidas quedan?', categorias: ['Bebidas sin Alcohol', 'Bebidas con Alcohol'] },
+  { q: '¿Cómo están los descartables?', categorias: ['Descartables', 'Caja Aderezo Individual'] },
+];
+
+// Que productos responde cada pregunta, filtrados por lo que el rol puede ver.
+function productosDePregunta(pregunta, productos, rol) {
+  let elegidos;
+  if (pregunta.faltantes) elegidos = productos.filter(isLow);
+  else if (pregunta.nombres) elegidos = productos.filter(p => pregunta.nombres.indexOf(p.name) !== -1);
+  else elegidos = productos.filter(p => (pregunta.categorias || []).indexOf(p.category) !== -1);
+  return elegidos.filter(p => canView(rol, p.category));
+}
+
 // ==================== ICONO DE CADA PRODUCTO ====================
 // Se busca por palabra clave dentro del nombre, de arriba hacia abajo, y
 // gana la primera que coincide. Por eso lo especifico va primero: "salsa
@@ -528,6 +562,7 @@ function App() {
   const [pendingEmployee, setPendingEmployee] = useState(null); // { name, role } elegido, esperando PIN
   const [pin, setPin] = useState('');
   const [buscar, setBuscar] = useState('');
+  const [preguntaAbierta, setPreguntaAbierta] = useState(null);
   const [authError, setAuthError] = useState(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [menu, setMenu] = useState(null);
@@ -754,7 +789,8 @@ function App() {
   const visibleLowCount = visibleProducts.filter(isLow).length;
 
   function goBack() {
-    if (view === 'detail') setView('products');
+    if (view === 'faq') setView('menu');
+    else if (view === 'detail') setView('products');
     else if (view === 'products') setView('categories');
     else if (view === 'categories') setView(menu === 'Caja' ? 'periods' : 'menu');
     else if (view === 'periods') setView('menu');
@@ -1025,6 +1061,7 @@ function App() {
                 )}
                 <div className="mg-display" style={{ fontSize: 18, fontWeight: 700 }}>
                   {view === 'menu' ? 'MEAT & GRILL'
+                    : view === 'faq' ? 'CONSULTAS'
                     : view === 'periods' ? 'CAJA'
                     : view === 'categories' ? (menu === 'Caja' ? `CAJA · ${period}` : 'COCINA')
                     : view === 'products' ? category
@@ -1069,6 +1106,89 @@ function App() {
                     <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.82)', marginTop: 5 }}>Conteo semanal y mensual</div>
                   </button>
                 )}
+                <button
+                  onClick={() => { setPreguntaAbierta(null); setView('faq'); }}
+                  className="mg-tap"
+                  style={{ ...menuCardStyle, padding: '18px 16px' }}
+                >
+                  <div className="mg-display" style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.03em' }}>CONSULTAS RÁPIDAS</div>
+                  <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>Preguntas frecuentes, respondidas al instante</div>
+                </button>
+              </div>
+            )}
+
+            {view === 'faq' && (
+              <div style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ color: C.muted, fontSize: 12.5, marginBottom: 2 }}>
+                  Tocá una pregunta para ver la respuesta con el stock de este momento.
+                </div>
+                {user && !products.some(p => canView(user.role, p.category)) && (
+                  <div style={{ color: C.muted, fontSize: 13.5, textAlign: 'center', padding: '24px 0' }}>
+                    Tu usuario todavía no tiene permisos para ver el inventario.
+                  </div>
+                )}
+                {PREGUNTAS.map((pregunta, i) => {
+                  // Si el rol no ve ningun producto, ninguna pregunta tiene
+                  // sentido: "no falta nada" seria enganoso.
+                  if (!user || !products.some(p => canView(user.role, p.category))) return null;
+                  const items = user ? productosDePregunta(pregunta, products, user.role) : [];
+                  // Una pregunta sin ningun producto visible para este rol no
+                  // se muestra: no tiene sentido ofrecer algo que responderia
+                  // siempre "nada".
+                  if (!items.length && !pregunta.faltantes) return null;
+                  const abierta = preguntaAbierta === i;
+                  const faltan = items.filter(isLow).length;
+                  return (
+                    <div key={pregunta.q} style={{ background: C.surface, border: `1px solid ${abierta ? C.accent : C.line}`, borderRadius: 12, overflow: 'hidden' }}>
+                      <button
+                        onClick={() => setPreguntaAbierta(abierta ? null : i)}
+                        className="mg-tap"
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          gap: 10, background: 'none', border: 'none', padding: '14px 16px',
+                          color: C.cream, cursor: 'pointer', textAlign: 'left', fontSize: 15, fontWeight: 600,
+                        }}
+                      >
+                        <span>{pregunta.q}</span>
+                        <span style={{ color: C.muted, fontSize: 18, flexShrink: 0 }}>{abierta ? '−' : '+'}</span>
+                      </button>
+                      {abierta && (
+                        <div style={{ padding: '0 16px 14px' }}>
+                          {items.length === 0 && (
+                            <div style={{ color: C.ok, fontSize: 13.5, padding: '6px 0' }}>
+                              No falta nada. Todo por encima del mínimo.
+                            </div>
+                          )}
+                          {items.length > 0 && (
+                            <div style={{ fontSize: 12.5, color: faltan ? C.alert : C.ok, marginBottom: 8 }}>
+                              {items.length} producto{items.length > 1 ? 's' : ''}
+                              {faltan > 0 ? ` · ${faltan} para reponer` : ' · todo en stock'}
+                            </div>
+                          )}
+                          {items.map(p => {
+                            const bajo = isLow(p);
+                            const u = totalUnits(p);
+                            return (
+                              <div key={p.id} style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                gap: 10, padding: '7px 0', borderTop: `1px solid ${C.line}`,
+                              }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                  <span style={{ fontSize: 17, flexShrink: 0 }}>{productIcon(p)}</span>
+                                  <span style={{ fontSize: 13.5 }}>{p.name}</span>
+                                </span>
+                                <span style={{ fontSize: 13.5, fontWeight: 600, color: bajo ? C.alert : C.ok, textAlign: 'right', flexShrink: 0 }}>
+                                  {p.stock} {plural(p.unit, p.stock)}
+                                  {u ? <span style={{ color: C.muted, fontWeight: 400 }}>{' · ' + u + ' u.'}</span> : null}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
