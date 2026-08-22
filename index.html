@@ -799,16 +799,39 @@ function App() {
     );
   }
 
+  // La foto de fondo del login va en una capa FIJA, no como background del
+  // contenedor: la lista de 14 personas no entra en una pantalla de celular,
+  // asi que la pantalla scrollea y el fondo se iria con ella.
+  // El degradado arriba es suave (deja ver la foto y su logo) y abajo casi
+  // opaco, que es donde estan los nombres y hay que poder leerlos.
+  // Si la imagen no cargara, queda el negro de siempre.
+  const fondoLogin = {
+    position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+    backgroundColor: C.bg,
+    backgroundImage:
+      'linear-gradient(to bottom,'
+      + ' rgba(14,14,14,0.30) 0%,'
+      + ' rgba(14,14,14,0.52) 30%,'
+      + ' rgba(14,14,14,0.86) 58%,'
+      + ' rgba(14,14,14,0.97) 100%),'
+      + ' url("fondo.jpg")',
+    backgroundSize: 'cover, cover',
+    backgroundPosition: 'center, center',
+    backgroundRepeat: 'no-repeat, no-repeat',
+  };
+
   return (
     <div style={containerStyle} className="mg-body">
-      <div style={{ maxWidth: 440, margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {view === 'login' && <div style={fondoLogin} aria-hidden="true" />}
+      <div style={{ maxWidth: 440, margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
 
         {view === 'login' && !pendingEmployee && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 28 }}>
             <StampBadge />
             <div style={{ textAlign: 'center' }}>
-              <div className="mg-display" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '0.04em' }}>MEAT &amp; GRILL</div>
-              <div style={{ color: C.muted, fontSize: 13, marginTop: 4, letterSpacing: '0.08em' }}>CONTROL DE STOCK</div>
+              {/* Sin el "MEAT & GRILL" grande: la foto de fondo ya lo trae, y
+                  con el sello arriba quedaban tres veces el mismo nombre. */}
+              <div style={{ color: C.cream, fontSize: 13, letterSpacing: '0.18em', opacity: 0.85 }}>CONTROL DE STOCK</div>
             </div>
             <div style={{ width: '100%' }}>
               <div style={{ color: C.muted, fontSize: 13, marginBottom: 10, textAlign: 'center' }}>¿Quién sos?</div>
@@ -816,8 +839,9 @@ function App() {
                 {EMPLOYEES.map(emp => (
                   <button key={emp.name} onClick={() => { setPendingEmployee(emp); setAuthError(null); setPin(''); }} className="mg-tap" style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12,
+                    background: 'rgba(26,26,26,0.86)', border: `1px solid ${C.line}`, borderRadius: 12,
                     padding: '14px 16px', color: C.cream, cursor: 'pointer',
+                    backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)',
                   }}>
                     <span style={{ fontWeight: 600, fontSize: 16 }}>{emp.name}</span>
                     <span style={{ color: C.muted, fontSize: 13 }}>{emp.role}</span>
