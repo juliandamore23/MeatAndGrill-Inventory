@@ -5,10 +5,8 @@
 -- Los minimos viven en la base, no en el codigo: por eso esto va por SQL.
 -- Se puede correr las veces que haga falta.
 --
--- OJO: de todo lo que pediste, en realidad solo 3 productos cambian. Los
--- minimos de Condimentos, Despensa y Manteca YA estaban todos en 1. Los
--- updates de categoria completa quedan igual, para dejar la intencion
--- escrita y por si alguien los toca en el futuro.
+-- OJO: Condimentos y Manteca salieron de este script. Ahora avisan solo
+-- cuando llegan a cero (minimo 0) y se manejan en avisar-solo-en-cero.sql.
 -- ============================================================
 
 -- 1) ANTES
@@ -26,13 +24,11 @@ where category = 'Panadería' and name = 'Pan de Lomo';
 update products set minimo = 2
 where category = 'Congelados' and name = 'Notco';
 
--- 4) Condimentos: todos en 1 (los 9 ya estaban asi)
-update products set minimo = 1
-where category = 'Condimentos';
-
--- 5) Manteca: todos en 1 (los 2 ya estaban asi)
-update products set minimo = 1
-where category = 'Manteca';
+-- 4) y 5) Condimentos y Manteca: YA NO VAN ACA.
+--    Los dos pasaron a "avisar solo en cero" (minimo 0), junto con la
+--    mostaza de mamadera. Eso vive en avisar-solo-en-cero.sql.
+--    Si se dejaran los updates a 1 que estaban aca, volver a correr este
+--    script desharia aquel cambio sin que nadie se diera cuenta.
 
 -- 6) Despensa: todos en 1, y despues la excepcion.
 --    El orden importa: primero todos, despues Cheddar.

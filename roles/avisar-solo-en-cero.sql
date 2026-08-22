@@ -3,6 +3,8 @@
 -- Supabase -> SQL Editor -> New query -> Run
 --
 -- Reemplaza a minimo-manteca.sql, que hacia lo mismo pero solo con manteca.
+-- OJO: Condimentos y Manteca se sacaron de minimos.sql, que los ponia en 1.
+-- Si no, volver a correr aquel script desharia esto sin que se note.
 --
 -- Son productos de los que nunca se usa mas de uno a la vez: con 1 estan
 -- bien y solo hay que reponer cuando no queda ninguno.
@@ -21,7 +23,7 @@
 select category, name, unit, stock, minimo,
        case when stock <= minimo then 'REPONER' else 'en stock' end as estado
 from products
-where category = 'Manteca'
+where category in ('Manteca', 'Condimentos')
    or (category = 'Salsas y Aderezos' and name = 'Mostaza')
 order by category, name;
 
@@ -30,7 +32,11 @@ order by category, name;
 update products set minimo = 0
 where category = 'Manteca';
 
--- 3) La mostaza de mamadera.
+-- 3) Los 9 condimentos: de uno solo nunca se usa mas de uno a la vez.
+update products set minimo = 0
+where category = 'Condimentos';
+
+-- 4) La mostaza de mamadera.
 --    OJO: solo esta. Hay otras dos mostazas que NO se tocan, porque son
 --    envases distintos y con otro consumo:
 --      Mostaza (Despensa)          -> sachet de 3kg
@@ -39,27 +45,29 @@ update products set minimo = 0
 where category = 'Salsas y Aderezos' and name = 'Mostaza';
 
 
--- 4) DESPUES: con 1 tienen que decir "en stock".
+-- 5) DESPUES: con 1 tienen que decir "en stock".
 select category, name, unit, stock, minimo,
        case when stock <= minimo then 'REPONER' else 'en stock' end as estado
 from products
-where category = 'Manteca'
+where category in ('Manteca', 'Condimentos')
    or (category = 'Salsas y Aderezos' and name = 'Mostaza')
 order by category, name;
 
 
--- 5) Control: estos tienen que ser los UNICOS con minimo 0.
---    Esperado: Manteca Noisette (Meat & Grill), Manteca Noisette (Tostadora)
---    y Mostaza. Si aparece alguno mas, se colo.
+-- 6) Control: estos tienen que ser los UNICOS con minimo 0.
+--    Esperado: 12 filas -> las 2 mantecas, los 9 condimentos y la mostaza
+--    de mamadera. Si aparece alguno mas, se colo.
 select category, name, unit, stock
 from products
 where minimo = 0
 order by category, name;
 
+select count(*) as con_minimo_cero from products where minimo = 0;
 
--- 6) Para tener a la vista: las otras mamaderas de Salsas y Aderezos siguen
+
+-- 7) Para tener a la vista: las otras mamaderas de Salsas y Aderezos siguen
 --    con minimo 1, asi que con 1 sola van a marcar REPONER. Si queres que se
---    porten como la mostaza, agregalas al update del paso 3.
+--    porten como la mostaza, agregalas al update del paso 4.
 select name, unit, stock, minimo
 from products
 where category = 'Salsas y Aderezos' and unit = 'Mamadera'
