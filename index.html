@@ -877,7 +877,7 @@ function App() {
       <div style={{ maxWidth: 440, margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
 
         {view === 'login' && !pendingEmployee && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 28 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '40px 24px 24px', gap: 22 }}>
             <StampBadge />
             <div style={{ textAlign: 'center' }}>
               {/* Sin el "MEAT & GRILL" grande: la foto de fondo ya lo trae, y
@@ -886,7 +886,13 @@ function App() {
             </div>
             <div style={{ width: '100%' }}>
               <div className="mg-display" style={{ color: C.cream, fontSize: 19, fontWeight: 700, letterSpacing: '0.02em', marginBottom: 12, textAlign: 'center' }}>¿Quién sos?</div>
-              <div style={{ position: 'relative', marginBottom: 12 }}>
+              <div style={{
+                position: 'sticky', top: 0, zIndex: 5,
+                padding: '8px 0 10px',
+                background: 'rgba(14,14,14,0.92)',
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              }}>
+               <div style={{ position: 'relative' }}>
                 <input
                   type="text"
                   value={buscar}
@@ -926,6 +932,7 @@ function App() {
                     }}
                   >&times;</button>
                 )}
+               </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {/* La lista arranca oculta: aparece recien al escribir. Asi la
