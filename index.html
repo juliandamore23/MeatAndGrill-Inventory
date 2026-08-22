@@ -28,7 +28,7 @@
   <div>
     <div style="font-size:18px; font-weight:600; margin-bottom:8px;">No se pudo cargar la app</div>
     <div style="font-size:13px; color:#8E8E8E; max-width:320px; margin:0 auto;">
-      Revisá tu conexión a internet e intentá de nuevo. Si el problema sigue, avisale a Julian con este mensaje: <span id="boot-error-detail" style="color:#F0242B;"></span>
+      Revisá tu conexión a internet e intentá de nuevo. Si el problema sigue, avisale a Julian con este mensaje: <span id="boot-error-detail" style="color:#F51C15;"></span>
     </div>
   </div>
 </div>
@@ -317,8 +317,8 @@ const STORAGE_KEY = 'meatgrill-inventario-v9';
 // Paleta: negro, el rojo de la marca y el blanco del logo.
 const C = {
   // Rojo de Meat & Grill. Es el color de marca: logo, botones principales.
-  accent: '#F0242B',
-  accentDark: '#C4161C',
+  accent: '#F51C15',
+  accentDark: '#C2150F',
 
   // OJO con esto: la alerta de "por debajo del mínimo" es ÁMBAR, no roja.
   // El rojo pasó a ser el color de la marca y está en el logo, los botones
@@ -338,23 +338,26 @@ const C = {
   muted: '#8E8E8E',
 };
 
-// El logo: círculo rojo pleno con el nombre en blanco, como el de la marca.
-// Está dibujado con CSS a propósito, sin ningún archivo de imagen: la app es
-// un HTML suelto y así no depende de que cargue nada externo.
+// El logo real de la marca, en logo.png (al lado de este archivo en el repo).
+// Va como archivo aparte y no incrustado en el HTML porque asi el navegador
+// lo cachea por su cuenta y, sobre todo, para cambiarlo alcanza con pisar
+// logo.png en GitHub — no hay que tocar una linea de codigo.
+// El fondo rojo del div queda de respaldo: si la imagen no cargara, se sigue
+// viendo el circulo de la marca en vez de un hueco.
 function StampBadge() {
   return (
     <div style={{
       width: 140, height: 140, borderRadius: '9999px', background: C.accent,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: '0 12px 32px rgba(240,36,43,0.28)', flexShrink: 0,
+      boxShadow: '0 12px 32px rgba(245,28,21,0.28)', flexShrink: 0,
+      overflow: 'hidden',
     }}>
-      <div className="mg-display" style={{
-        color: C.cream, fontWeight: 700, fontSize: 23, lineHeight: 1,
-        letterSpacing: '0.01em', whiteSpace: 'nowrap',
-        transform: 'rotate(-3deg)', textShadow: '0 2px 0 rgba(0,0,0,0.16)',
-      }}>
-        MEAT<span style={{ fontSize: 15, margin: '0 3px', verticalAlign: '2px' }}>&amp;</span>GRILL
-      </div>
+      <img
+        src="logo.png"
+        alt="Meat &amp; Grill"
+        width={140}
+        height={140}
+        style={{ width: '100%', height: '100%', display: 'block' }}
+      />
     </div>
   );
 }
