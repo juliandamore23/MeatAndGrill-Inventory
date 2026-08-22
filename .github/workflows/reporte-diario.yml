@@ -1,0 +1,55 @@
+name: Reporte diario de inventario
+
+# Lunes a sabado a las 23:00 de Argentina.
+#
+# GitHub programa todo en UTC y Argentina es UTC-3, asi que las 23:00 de aca
+# son las 02:00 UTC del dia SIGUIENTE. Por eso los dias corridos van uno mas:
+#
+#   lunes    23:00 AR  ->  martes    02:00 UTC  (2)
+#   martes   23:00 AR  ->  miercoles 02:00 UTC  (3)
+#   miercoles23:00 AR  ->  jueves    02:00 UTC  (4)
+#   jueves   23:00 AR  ->  viernes   02:00 UTC  (5)
+#   viernes  23:00 AR  ->  sabado    02:00 UTC  (6)
+#   sabado   23:00 AR  ->  domingo   02:00 UTC  (0)
+#
+# El unico dia UTC que queda afuera es el lunes (1), que seria el domingo
+# 23:00 de Argentina: justo el dia que el local no abre.
+#
+# Igual el script vuelve a chequear el dia en hora argentina antes de mandar
+# nada, asi que aunque este cron estuviera mal, los domingos no sale.
+
+on:
+  schedule:
+    - cron: '0 2 * * 0,2,3,4,5,6'
+  workflow_dispatch:        # boton "Run workflow" para probarlo cuando quieras
+
+permissions:
+  contents: read
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Bajar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Armar el PDF y enviarlo
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          MG_EMAIL: ${{ secrets.MG_EMAIL }}
+          MG_PASSWORD: ${{ secrets.MG_PASSWORD }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          DESTINATARIOS: ${{ secrets.DESTINATARIOS }}
+        run: python scripts/reporte_inventario.py
