@@ -132,6 +132,20 @@ const CAJA_STRUCTURE = {
   ],
 };
 
+// Orden en que aparecen los roles en la pantalla de login.
+// Se ordena al mostrar en vez de reacomodar EMPLOYEES a mano: asi el dia que
+// se sume alguien, cae solo en su grupo sin importar donde se lo escriba.
+// El orden dentro de cada rol es el de EMPLOYEES (el sort de JS es estable).
+// Un rol que no este en esta lista se va al final en vez de saltar al principio.
+const ORDEN_ROLES = ['Jefe', 'Cocinero', 'Armador', 'Papero', 'Panadero', 'Limpieza', 'Caja', 'Runner'];
+function ordenRol(rol) {
+  const i = ORDEN_ROLES.indexOf(rol);
+  return i === -1 ? ORDEN_ROLES.length : i;
+}
+const EMPLEADOS_ORDENADOS = EMPLOYEES.slice().sort(
+  (a, b) => ordenRol(a.role) - ordenRol(b.role)
+);
+
 // ==================== ICONO DE CADA PRODUCTO ====================
 // Se busca por palabra clave dentro del nombre, de arriba hacia abajo, y
 // gana la primera que coincide. Por eso lo especifico va primero: "salsa
@@ -834,9 +848,9 @@ function App() {
               <div style={{ color: C.cream, fontSize: 13, letterSpacing: '0.18em', opacity: 0.85 }}>CONTROL DE STOCK</div>
             </div>
             <div style={{ width: '100%' }}>
-              <div style={{ color: C.muted, fontSize: 13, marginBottom: 10, textAlign: 'center' }}>¿Quién sos?</div>
+              <div className="mg-display" style={{ color: C.cream, fontSize: 19, fontWeight: 700, letterSpacing: '0.02em', marginBottom: 12, textAlign: 'center' }}>¿Quién sos?</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {EMPLOYEES.map(emp => (
+                {EMPLEADOS_ORDENADOS.map(emp => (
                   <button key={emp.name} onClick={() => { setPendingEmployee(emp); setAuthError(null); setPin(''); }} className="mg-tap" style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     background: 'rgba(26,26,26,0.86)', border: `1px solid ${C.line}`, borderRadius: 12,
