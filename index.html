@@ -909,12 +909,11 @@ function App() {
             </div>
             <div style={{ width: '100%' }}>
               <div className="mg-display" style={{ color: C.cream, fontSize: 19, fontWeight: 700, letterSpacing: '0.02em', marginBottom: 12, textAlign: 'center' }}>¿Quién sos?</div>
-              <div style={{
-                position: 'sticky', top: 0, zIndex: 5,
-                padding: '8px 0 10px',
-                background: 'rgba(14,14,14,0.92)',
-                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-              }}>
+              {/* Sin fondo propio ni relleno: asi el campo se ve igual que
+                  antes, flotando sobre la foto, en vez de parecer una banda
+                  pegada aparte. Al scrollear queda fijo arriba y tapa lo que
+                  pasa por detras con su propia opacidad. */}
+              <div style={{ position: 'sticky', top: 0, zIndex: 5, marginBottom: 12 }}>
                <div style={{ position: 'relative' }}>
                 <input
                   type="text"
@@ -936,10 +935,11 @@ function App() {
                   className="mg-body"
                   style={{
                     width: '100%', boxSizing: 'border-box',
-                    background: 'rgba(26,26,26,0.86)', border: `1px solid ${C.line}`,
+                    background: 'rgba(24,24,24,0.95)', border: `1px solid ${C.line}`,
                     borderRadius: 12, padding: '13px 40px 13px 14px',
                     color: C.cream, fontSize: 15, outline: 'none',
-                    backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)',
+                    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.30)',
                   }}
                 />
                 {buscar && (
