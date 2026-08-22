@@ -820,11 +820,7 @@ function App() {
   const FONDOS = {
     login:      { foto: 'fondo.jpg',             velo: [0.30, 0.52, 0.86, 0.97] },
     menu:       { foto: 'fondo-menu.jpg',        velo: [0.55, 0.66, 0.82, 0.94] },
-    cocina:     { foto: 'fondo-cocina.jpg',      velo: [0.62, 0.72, 0.86, 0.95] },
-    // La de Caja no es una foto de fondo sino un recorte sobre blanco. Va
-    // como emblema centrado sobre el negro, no estirada a pantalla completa:
-    // asi no queda un fondo casi blanco con la bolsa cortada por los bordes.
-    caja:       { emblema: 'fondo-caja.png' },
+    categorias: { foto: 'fondo-categorias.jpg',  velo: [0.62, 0.72, 0.86, 0.95] },
     // Dentro de una categoria NO va foto. Ahi se cambia el stock y hay que
     // leer los estados en ambar y verde de un vistazo: cualquier imagen
     // detras compite justo donde no tiene que competir.
@@ -836,23 +832,9 @@ function App() {
     view === 'login' ? 'login'
     : view === 'menu' ? 'menu'
     : (view === 'products' || view === 'detail') ? 'productos'
-    : menu === 'Caja' ? 'caja'
-    : 'cocina'
+    : 'categorias'
   ];
-  const capaFondo = fondoActual.emblema
-    ? {
-        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-        backgroundColor: C.bg,
-        backgroundImage:
-          'radial-gradient(120% 70% at 50% 42%,'
-          + ' rgba(245,28,21,0.13) 0%, rgba(14,14,14,0) 70%),'
-          + ' url("' + fondoActual.emblema + '")',
-        backgroundSize: '100% 100%, min(62vw, 300px) auto',
-        backgroundPosition: 'center, center 46%',
-        backgroundRepeat: 'no-repeat, no-repeat',
-        opacity: 1,
-      }
-    : fondoActual.color
+  const capaFondo = fondoActual.color
     ? {
         position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
         backgroundColor: C.bg,
@@ -1077,16 +1059,14 @@ function App() {
 
             {view === 'menu' && (
               <div style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
-                <button onClick={() => { setMenu('Cocina'); setCategory(null); setView('categories'); }} className="mg-tap" style={menuCardStyle}>
-                  <div style={{ fontSize: 32 }}>🍳</div>
-                  <div className="mg-display" style={{ fontSize: 20, fontWeight: 700, marginTop: 8 }}>COCINA</div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Inventario de cocina y depósito</div>
+                <button onClick={() => { setMenu('Cocina'); setCategory(null); setView('categories'); }} className="mg-tap" style={menuCardFoto('card-cocina.jpg', [0.66, 0.80])}>
+                  <div className="mg-display" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '0.04em' }}>COCINA</div>
+                  <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.82)', marginTop: 5 }}>Inventario de cocina y depósito</div>
                 </button>
                 {user && VIEW_ALL_ROLES.includes(user.role) && (
-                  <button onClick={() => { setMenu('Caja'); setPeriod(null); setView('periods'); }} className="mg-tap" style={menuCardStyle}>
-                    <div style={{ fontSize: 32 }}>💰</div>
-                    <div className="mg-display" style={{ fontSize: 20, fontWeight: 700, marginTop: 8 }}>CAJA</div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Conteo semanal y mensual</div>
+                  <button onClick={() => { setMenu('Caja'); setPeriod(null); setView('periods'); }} className="mg-tap" style={menuCardFoto('card-caja.jpg', [0.34, 0.55])}>
+                    <div className="mg-display" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '0.04em' }}>CAJA</div>
+                    <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.82)', marginTop: 5 }}>Conteo semanal y mensual</div>
                   </button>
                 )}
               </div>
@@ -1330,6 +1310,27 @@ function btnStyle(color) {
     color, cursor: 'pointer', fontWeight: 700,
   };
 }
+// Las tarjetas de COCINA y CAJA llevan su foto de fondo. El velo va DENTRO
+// del background de la tarjeta y no como capa aparte, asi acompaña las
+// esquinas redondeadas sin recortes raros. Cada foto lleva el suyo: la de
+// cocina es clara y cargada y necesita mas; la de caja ya es casi negra.
+function menuCardFoto(foto, velo) {
+  return {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    border: '1px solid #333333', borderRadius: 16,
+    padding: '34px 16px', cursor: 'pointer', color: '#FFFFFF', textAlign: 'center',
+    backgroundColor: '#1A1A1A',
+    backgroundImage:
+      'linear-gradient(to bottom, rgba(14,14,14,' + velo[0] + ') 0%,'
+      + ' rgba(14,14,14,' + velo[1] + ') 100%),'
+      + ' url("' + foto + '")',
+    backgroundSize: 'cover, cover',
+    backgroundPosition: 'center, center',
+    backgroundRepeat: 'no-repeat, no-repeat',
+    textShadow: '0 2px 10px rgba(0,0,0,0.95)',
+  };
+}
+
 const menuCardStyle = {
   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
   background: 'rgba(26,26,26,0.86)', border: '1px solid #333333', borderRadius: 16,
